@@ -36,57 +36,31 @@ public class Queen extends Piece
         if(rank == this.rank  &&  file == this.file)
             return false;
     
+        int rJump = 0, fJump = 0;
         if(rank == this.rank) {
-            int jump = file > this.file ? +1 : -1;
-            int f = this.file + jump;
-            while(f != file) {
-                if(pos.board[rank][f] != null)
-                    return false;
-                f += jump;
-            }
-            return true;
+            fJump = file > this.file ? +1 : -1;
         }
         else if(file == this.file) {
-            int jump = rank > this.rank ? +1 : -1;
-            int r = this.rank + jump;
-            while(r != rank) {
-                if(pos.board[r][file] != null)
-                    return false;
-                r += jump;
-            }
-            return true;
+            rJump = rank > this.rank ? +1 : -1;
         }
         else if(this.rank - this.file == rank - file) {
-            int rJump, fJump, r, f;
             if(this.rank < rank)
                 rJump = fJump = +1;
             else
                 rJump = fJump = -1;
-            r = this.rank + rJump;  f = this.file + fJump;
-            while(r != rank) {
-                if(pos.board[r][f] != null) 
-                    return false;
-                r += rJump;     f += fJump;
-            }
-            return true;
         }
         else if(this.rank + this.file == rank + file) {
-            int rJump, fJump, r, f;
             if(this.rank < rank) {
                 rJump = +1;     fJump = -1;
             }
             else {
                 rJump = -1;     fJump = +1;
             }
-            r = this.rank + rJump;  f = this.file + fJump;
-            while(r != rank) {
-                if(pos.board[r][f] != null) 
-                    return false;
-                r += rJump;     f += fJump;
-            }
-            return true;
         }
-        return false;
+        else {
+            return false;
+        }
+        return !obstruction(pos, rank, file, rJump, fJump);
     }
 
     @Override
