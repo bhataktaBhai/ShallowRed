@@ -47,13 +47,7 @@ public class Bishop extends Piece
                 rJump = fJump = +1;
             else
                 rJump = fJump = -1;
-            r = this.rank + rJump;  f = this.file + fJump;
-            while(r != rank) {
-                if(pos.board[r][f] != null) 
-                    return false;
-                r += rJump;     f += fJump;
-            }
-            return true;
+            return !obstruction(pos, rank, file, rJump, fJump);
         }
         else if(this.rank + this.file == rank + file) {
             int rJump, fJump, r, f;
@@ -63,13 +57,7 @@ public class Bishop extends Piece
             else {
                 rJump = -1;     fJump = +1;
             }
-            r = this.rank + rJump;  f = this.file + fJump;
-            while(r != rank) {
-                if(pos.board[r][f] != null) 
-                    return false;
-                r += rJump;     f += fJump;
-            }
-            return true;
+            return !obstruction(pos, rank, file, rJump, fJump);
         }
         return false;
     }
