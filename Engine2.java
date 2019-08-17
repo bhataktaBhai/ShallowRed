@@ -132,7 +132,7 @@ public class Engine2
         }
         return tree;
     }
-    private ArrayList<MoveData> plantTree(Position pos, int layer, int trueLayer, int checkers, int[] captureLocation) throws Exception
+    private ArrayList<MoveData> plantTree(Position pos, int layer, int trueLayer, int[] captureLocation) throws Exception
     {
         if(layer < 1)
             return null;
@@ -144,6 +144,7 @@ public class Engine2
             }
             ArrayList<int[]> moves = piece.movableTo(pos);
             for(int[] move : moves) {
+				
                 if(captureLocation != null  &&  (move[0] != captureLocation[0]  ||  move[1] != captureLocation[1]))
                     continue;
                 
@@ -172,7 +173,7 @@ public class Engine2
                         }
                     }
                 }
-                //en passant...
+                //en passant and double moving...
                 if(piece instanceof Pawn) {
                     if(piece.file != move[1]  &&  pos.board[move[0]][move[1]] == null) {
                         capture = true;
@@ -187,32 +188,17 @@ public class Engine2
                 Piece movedPiece = piece.move(move);
                 newPieces.add(movedPiece);
                 
-                Position newPosition = null;
-                try {
-                    newPosition = new Position(newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
-                }
-                catch(NoKingException e) {
-                    System.out.println(pos);
-                    System.out.println(piece + "\n" + movedPiece + "\n" + Arrays.toString(move));
-                    System.out.println(pos.allPieces.size() + "\t");
-                    for(int j = 0; j < pos.allPieces.size(); j++) {
-                        System.out.print(pos.allPieces.get(j) + "\t");
-                        if(j < newPieces.size())
-                            System.out.println(newPieces.get(j));
-                    }
-                    throw new NoKingException();
-                }
+                Position newPosition = new Position(newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
                 capture = capture  &&  newPosition.underCheck(movedPiece);
-                int newCheckers = newPosition.CHECKERS.size();
-                int newLayer = layer == 1 ? (newCheckers > 0 ? layer + 1 : (capture ? layer : layer - 1) ) : layer - 1;
+                int newLayer = layer > 1 ? layer - 1 : (newPosition.CHECK > 0 ? 2 : (capture ? 1 : 0));
                 
                 MoveData possibleMove = new MoveData(piece, move, newPosition.eval(), newCheckers);
-                if(!capture  ||  newCheckers > 0)
+                if(!capture  ||  newPosition.CHECK)
                     move = null;
                 //for(int j = 1; j < trueLayer; j++)
                 //    System.out.print('\t');
-                //System.out.println(trueLayer + possibleMove.toString());
-                possibleMove.setTree(plantTree(newPosition, /*newLayer*/ layer - 1, trueLayer + 1, newCheckers, move));
+                //System.out.println(trueLayer + possibleMove.toString(pos.board));
+                possibleMove.setTree(plantTree(newPosition, /*newLayer*/ layer - 1, trueLayer + 1, move));
                 tree.add(possibleMove);
             }
         }
