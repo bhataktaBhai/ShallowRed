@@ -18,13 +18,11 @@ public class Engine2
             private final Move MOVE;
             private ArrayList<MoveData> TREE;
             private final float EVAL;
-            private final int CHECKERS;
             
-            MoveData(Piece p, int[] move, float evaluation, int checkers)
+            MoveData(Piece p, int[] move, float evaluation)
             {
                 MOVE = new Move(p, move);
                 EVAL = evaluation;
-                CHECKERS = checkers;
             }
             
             void setTree(ArrayList<MoveData> tree) {
@@ -192,7 +190,7 @@ public class Engine2
                 capture = capture  &&  newPosition.underCheck(movedPiece);
                 int newLayer = layer > 1 ? layer - 1 : (newPosition.CHECK > 0 ? 2 : (capture ? 1 : 0));
                 
-                MoveData possibleMove = new MoveData(piece, move, newPosition.eval(), newCheckers);
+                MoveData possibleMove = new MoveData(piece, move, newPosition.eval());
                 if(!capture  ||  newPosition.CHECK)
                     move = null;
                 //for(int j = 1; j < trueLayer; j++)
