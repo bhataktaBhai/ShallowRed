@@ -36,6 +36,10 @@ public class Engine2
             {
                 return MOVE.toString();
             }
+            public String toString(Piece[][] board)
+            {
+                return MOVE.toString(board);
+            }
         }
     
     public Move play(Position pos, Move move) throws NullPieceException, NoKingException, Exception
