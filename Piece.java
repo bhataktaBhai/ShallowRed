@@ -87,7 +87,7 @@ public abstract class Piece
         King king = pos.king;
         
         if(pos.CHECKERS.size() > 1) {
-            return new ArrayList<>();
+            return new ArrayList<>(0);
         }
         
         //finds direction of king to piece
@@ -113,30 +113,9 @@ public abstract class Piece
         //determines if piece is pinned to king
         //error-free (excl. methods called)
         if(rJump != 0  ||  fJump != 0) {
-            int r = this.rank + rJump;
-            int f = this.file + fJump;
-            while(r != king.rank  ||  f != king.file) {
-                if(pos.board[r][f] != null)
-                    break;  //effectively breaks out of if()
-                r += rJump;
-                f += fJump;
-            }
-            if(r == king.rank  &&  f == king.file) {
-                r = this.rank - rJump;
-                f = this.file - fJump;
-                while(Utils.exists(r, f)) {
-                    Piece enemySuspect = pos.board[r][f];
-                    if(enemySuspect != null) {
-                        if(enemySuspect.colour != colour  &&  enemySuspect.isFreelyMoving()) {
-                            if(enemySuspect.mightBeEyeing(rank, file)) {
-                                pinned = true;
-                            }
-                        }
-                        break;
-                    }
-                    r -= rJump;
-                    f -= fJump;
-                }
+            if(nearestPiece(pos, rJump, fJump) == king) {
+                Piece enemy = nearestPiece(pos, -rJump, -fJump);
+                pinned = (enemy != null  &&  enemy.colour != colour  &&  enemy.mightBeEyeing(rank, file));
             }
         }
         
