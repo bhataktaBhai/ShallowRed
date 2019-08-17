@@ -108,30 +108,19 @@ public class Rook extends Piece
         return (rank == this.rank) || (file == this.file);
     }
     @Override
-    public boolean isEyeing(Position pos, int rank, int file)       //Optimised.
+    public boolean isEyeing(Position pos, int rank, int file)
     {
         if(rank == this.rank  &&  file == this.file)
             return false;
         
+        int jump;
         if(rank == this.rank) {
-            int jump = file > this.file ? +1 : -1;
-            int f = this.file + jump;
-            while(f != file) {
-                if(pos.board[rank][f] != null)
-                    return false;
-                f += jump;
-            }
-            return true;
+            jump = file > this.file ? +1 : -1;
+            return !obsturction(pos, rank, file, 0, jump);
         }
         else if(file == this.file) {
-            int jump = rank > this.rank ? +1 : -1;
-            int r = this.rank + jump;
-            while(r != rank) {
-                if(pos.board[r][file] != null)
-                    return false;
-                r += jump;
-            }
-            return true;
+            jump = rank > this.rank ? +1 : -1;
+            return !obsturction(pos, rank, file, jump, 0);
         }
         return false;
     }
