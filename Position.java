@@ -81,8 +81,15 @@ public class Position
     public boolean underCheck(Piece defender)
     {
         for(Piece attacker : allPieces) {
-            if(attacker.colour != defender.colour) {
+            if(attacker instanceof Knight  &&  attacker.colour != defender.colour) {
                 if(attacker.isEyeing(this, defender.rank, defender.file))
+                    return true;
+            }
+        }
+        for(int[] step : Piece.ALL_DIRECTIONS) {
+            Piece attacker = defender.nearestPiece(this, step[0], step[1]);
+            if(attacker.colour != defender.colour) {
+                if(attacker.mightBeEyeing(this, defender.rank, defender.file))
                     return true;
             }
         }
