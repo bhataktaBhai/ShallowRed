@@ -123,13 +123,7 @@ public class Engine2
             Position newPos = pos.move(potentialMove.MOVE);
             if(potentialMove.TREE == null) {
                 if(!newPos.stuck()) {
-                    try {
-                        potentialMove.setTree(plantTree(newPos, layer - 1, LAYER - layer + 2, potentialMove.CHECKERS, null));
-                    }
-                    catch(NoKingException e) {
-                        System.out.println(newPos);
-                        System.exit(1);
-                    }
+                    potentialMove.setTree(plantTree(newPos, layer - 1, LAYER - layer + 2, potentialMove.CHECKERS, null));               
                 }
             }
             else {
