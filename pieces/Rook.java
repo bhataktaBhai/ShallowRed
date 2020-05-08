@@ -116,11 +116,11 @@ public class Rook extends Piece
         int jump;
         if(rank == this.rank) {
             jump = file > this.file ? +1 : -1;
-            return !obsturction(pos, rank, file, 0, jump);
+            return !obstruction(pos, rank, file, 0, jump);
         }
         else if(file == this.file) {
             jump = rank > this.rank ? +1 : -1;
-            return !obsturction(pos, rank, file, jump, 0);
+            return !obstruction(pos, rank, file, jump, 0);
         }
         return false;
     }

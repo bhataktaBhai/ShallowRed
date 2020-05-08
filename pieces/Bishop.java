@@ -30,9 +30,10 @@ public class Bishop extends Piece
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
-        if(rank == this.rank  &&  file == this.file)
+        if(rank == this.rank)
             return false;
     
+        //      y - x = c  =>  slope = 1                  y + x = c  =>  slope = -1
         return (this.rank - this.file == rank - file) || (this.rank + this.file == rank + file);
     }
     @Override
@@ -42,7 +43,7 @@ public class Bishop extends Piece
             return false;
         
         if(this.rank - this.file == rank - file) {
-            int rJump, fJump, r, f;
+            int rJump, fJump;
             if(this.rank < rank)
                 rJump = fJump = +1;
             else
@@ -50,13 +51,11 @@ public class Bishop extends Piece
             return !obstruction(pos, rank, file, rJump, fJump);
         }
         else if(this.rank + this.file == rank + file) {
-            int rJump, fJump, r, f;
-            if(this.rank < rank) {
-                rJump = +1;     fJump = -1;
-            }
-            else {
-                rJump = -1;     fJump = +1;
-            }
+            int rJump, fJump;
+            if(this.rank < rank)
+                fJump = -(rJump = 1);
+            else
+                rJump = -(fJump = 1);
             return !obstruction(pos, rank, file, rJump, fJump);
         }
         return false;

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class King extends Piece
 {
-    private static final int VAL = 1000;
+    private static final int VAL = Integer.MAX_VALUE;
     private static final boolean FREELY_MOVING = false;
     private final boolean HAS_MOVED;
 
@@ -17,7 +17,7 @@ public class King extends Piece
     }
 
     @Override
-    public ArrayList<int[]> eyeing(Position pos)                           //Optimised.
+    public ArrayList<int[]> eyeing(Position pos)
     {
         ArrayList<int[]> eye = new ArrayList<>();
         for(int[] step : ALL_DIRECTIONS) {
@@ -29,7 +29,7 @@ public class King extends Piece
         return eye;
     }
     @Override
-    public ArrayList<Piece> eyeingEnemies(Position pos)                    //Optimised.
+    public ArrayList<Piece> eyeingEnemies(Position pos)
     {
         ArrayList<Piece> eye = new ArrayList<>();
         for(int[] step : ALL_DIRECTIONS) {
@@ -42,25 +42,26 @@ public class King extends Piece
         return eye;
     }
 
-    //@Override
     public boolean canMoveInDirection(int rJump, int fJump)
     {
-        return rJump / 2 == 0  &&  fJump / 2 == 0;
+        rJump = Math.abs(rJump);
+        fJump = Math.abs(fJump);
+        return rJump < 2  &&  fJump < 2  &&  rJump + fJump != 0;
     }
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
+        return isEyeing(null, rank, file);
+    }
+    @Override
+    public boolean isEyeing(Position notRequired, int rank, int file)
+    {
         if(rank == this.rank  &&  file == this.file)
             return false;
     
-        int rankDiff = Math.abs(rank - this.rank);
-        int fileDiff = Math.abs(file - this.file);
-        return (rankDiff < 2  &&  fileDiff < 2);
-    }
-    @Override
-    public boolean isEyeing(Position notRequired, int rank, int file)       //Optimised.
-    {
-        return mightBeEyeing(rank, file);
+        int rJump = Math.abs(rank - this.rank);
+        int fJump = Math.abs(file - this.file);
+        return rJump < 2  &&  fJump < 2;
     }
 
     @Override

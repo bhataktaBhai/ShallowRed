@@ -2,7 +2,6 @@ package pieces;
 
 import chess.Utils;
 import chess.Position;
-import except.NullPieceException;
 import java.util.ArrayList;
 
 public class Pawn extends Piece
@@ -31,9 +30,6 @@ public class Pawn extends Piece
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
-        if(rank == this.rank  &&  file == this.file)
-            return false;
-    
         return (this.rank + colour == rank)  &&  Math.abs(this.file - file) == 1;
     }
     @Override
@@ -213,7 +209,7 @@ public class Pawn extends Piece
     }
     
     @Override
-    public Piece move(int[] newLocation) throws NullPieceException
+    public Piece move(int[] newLocation)
     {
         if(newLocation.length > 2  &&  newLocation[2] != 0) {
             return promote(newLocation[2], newLocation[0], newLocation[1]);
@@ -223,7 +219,7 @@ public class Pawn extends Piece
         return p;
     }
 
-    Piece promote(int piece, int rank, int file) throws NullPieceException
+    Piece promote(int piece, int rank, int file)
     {
         char newSymbol = '\u0000';
         switch(piece) {

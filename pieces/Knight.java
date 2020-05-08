@@ -53,9 +53,6 @@ public class Knight extends Piece
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
-        if(rank == this.rank  &&  file == this.file)
-            return false;
-        
         int rJump = Math.abs(rank - this.rank);
         int fJump = Math.abs(file - this.file);
         return (rJump == 2  &&  fJump == 1  ||  rJump == 1  &&  fJump == 2);
