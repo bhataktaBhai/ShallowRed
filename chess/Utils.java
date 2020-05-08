@@ -8,13 +8,19 @@ public abstract class Utils
 {
     /**
      * A 'safe' way to access a member of a chessboard. Avoids
-     * {@code ArrayIndexOutOfBoundsException}
-     * @param board A 2D {@code Piece} array representing a state
-     * of the chessboard.
-     * @param rank The required rank.
-     * @param file The required file.
-     * @return {@code board[rank][file]}, or {@code null} in the
-     * case of non-existent co-ordinates.
+     * <code>ArrayIndexOutOfBoundsException</code>.
+     * <p>
+     * Identical to <code>{@link #exists(int, int) exists(rank, file)} ?
+     * board[rank][file] : null;</code>
+     * </p>
+     * 
+     * @param board     A 2D Piece array representing the chessboard
+     * @param rank      The required rank
+     * @param file      The required file
+     * 
+     * @return          board[rank][file], or null in the case of non-existent
+     *                  co-ordinates
+     * @see             exists(int, int) 
      */
     public static Piece get(Piece[][] board, int rank, int file)
     {
@@ -54,9 +60,11 @@ public abstract class Utils
 
     /**
      * Prints the chessboard from both players' sides. Also prints the rank and
-     * file names next to the ranks and files, to make it easier to
-     * use algebraic notation. This is entirely text-based and the board,
-     * alas, is not black and white. Just white.
+     * file names next to the ranks and files to make it easier to use
+     * algebraic notation. This is entirely text-based and the board, alas, is
+     * not black and white. Just white.
+     * 
+     * @param board     A 2D Piece array representing the chessboard
      */
     public static void print(Piece[][] board)
     {

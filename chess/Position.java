@@ -1,6 +1,5 @@
 package chess;
 
-import except.NoKingException;
 import pieces.*;
 import java.util.ArrayList;
 
@@ -19,7 +18,7 @@ public class Position
     private Float evaluation = null;
     private Boolean stuck;
     
-    Position(ArrayList<Piece> pieces, int turn, Pawn doubleMover) throws NoKingException
+    Position(ArrayList<Piece> pieces, int turn, Pawn doubleMover)
     {
         allPieces = new ArrayList<>(pieces.size());
         ArrayList<Pawn> pawns = new ArrayList<>();
@@ -47,9 +46,6 @@ public class Position
             enPassantPossible = ((pawnSuspect1 instanceof Pawn  &&  pawnSuspect1.colour == turn)  ||
                     (pawnSuspect2 instanceof Pawn  &&  pawnSuspect2.colour == turn));
         }
-        
-        if(king == null)
-            throw new NoKingException();
         
         CHECKERS = attackers(king);
         CHECK = !CHECKERS.isEmpty();
@@ -88,8 +84,8 @@ public class Position
         }
         for(int[] step : Piece.ALL_DIRECTIONS) {
             Piece attacker = defender.nearestPiece(this, step[0], step[1]);
-            if(attacker.colour != defender.colour) {
-                if(attacker.mightBeEyeing(this, defender.rank, defender.file))
+            if(attacker != null  &&  attacker.colour != defender.colour) {
+                if(attacker.mightBeEyeing(defender.rank, defender.file))
                     return true;
             }
         }
@@ -308,7 +304,7 @@ public class Position
         return "DIE!";
     }
     
-    public Position move(Move move) throws Exception
+    public Position move(Move move)
     {
         Piece mover = this.board[move.originRank()][move.originFile()];
         int rank = move.rank();
@@ -345,7 +341,7 @@ public class Position
                 return new Position(newPieces, -turn, doubleMover);
             }
         }
-        throw new Exception("Invalid move.");
+        return null;
     }
     
     /*

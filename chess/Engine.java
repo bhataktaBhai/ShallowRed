@@ -1,7 +1,5 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
 import pieces.King;
 import pieces.Pawn;
 import pieces.Piece;
@@ -42,7 +40,7 @@ public class Engine
             }
         }
 
-    public Position play(Position pos) throws NullPieceException, NoKingException
+    public Position play(Position pos)
     {
         tree = getTree(pos);
         tree = growTree(tree, LAYER);
@@ -70,7 +68,7 @@ public class Engine
     }
     
     
-    private ArrayList<MoveData> getTree(Position pos) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> getTree(Position pos)
     {
         if(tree == null) {
             return plantTree(pos, LAYER);
@@ -91,7 +89,7 @@ public class Engine
         return null;
     }
     
-    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, int layer) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, int layer)
     {
         for(MoveData possibleMove : tree) {
             if(possibleMove.tree() == null) {
@@ -108,7 +106,7 @@ public class Engine
         }
         return tree;
     }
-    private ArrayList<MoveData> plantTree(Position pos, int layer) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> plantTree(Position pos, int layer)
     {
         if(layer < 1)
             return null;

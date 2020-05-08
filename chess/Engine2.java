@@ -1,12 +1,9 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
 import pieces.King;
 import pieces.Pawn;
 import pieces.Piece;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Engine2
 {
@@ -40,7 +37,7 @@ public class Engine2
             }
         }
     
-    public Move play(Position pos, Move move) throws NullPieceException, NoKingException, Exception
+    public Move play(Position pos, Move move)
     {
         //System.out.println("Getting tree...");
         tree = getTree(move);
@@ -110,10 +107,10 @@ public class Engine2
         return bestMove;
     }
         
-    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, Position pos, int layer) throws NullPieceException, NoKingException, Exception
+    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, Position pos, int layer)
     {
         if(tree == null)
-            return plantTree(pos, layer, LAYER - layer + 1, pos.CHECKERS.size(), null);
+            return plantTree(pos, layer, LAYER - layer + 1, null);
         if(layer < 1)
             return tree;
         for(MoveData potentialMove : tree)
@@ -121,7 +118,7 @@ public class Engine2
             Position newPos = pos.move(potentialMove.MOVE);
             if(potentialMove.TREE == null) {
                 if(!newPos.stuck()) {
-                    potentialMove.setTree(plantTree(newPos, layer - 1, LAYER - layer + 2, potentialMove.CHECKERS, null));               
+                    potentialMove.setTree(plantTree(newPos, layer - 1, LAYER - layer + 2, null));               
                 }
             }
             else {
@@ -130,7 +127,7 @@ public class Engine2
         }
         return tree;
     }
-    private ArrayList<MoveData> plantTree(Position pos, int layer, int trueLayer, int[] captureLocation) throws Exception
+    private ArrayList<MoveData> plantTree(Position pos, int layer, int trueLayer, int[] captureLocation)
     {
         if(layer < 1)
             return null;
@@ -188,7 +185,7 @@ public class Engine2
                 
                 Position newPosition = new Position(newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
                 capture = capture  &&  newPosition.underCheck(movedPiece);
-                int newLayer = layer > 1 ? layer - 1 : (newPosition.CHECK > 0 ? 2 : (capture ? 1 : 0));
+                int newLayer = layer > 1 ? layer - 1 : (newPosition.CHECK ? 2 : (capture ? 1 : 0));
                 
                 MoveData possibleMove = new MoveData(piece, move, newPosition.eval());
                 if(!capture  ||  newPosition.CHECK)

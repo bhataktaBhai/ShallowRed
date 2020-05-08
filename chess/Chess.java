@@ -1,13 +1,10 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
 import pieces.King;
 import pieces.Pawn;
 import pieces.Piece;
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javafx.util.Pair;
 
 /**
@@ -42,7 +39,7 @@ public class Chess
     /**
      * Sets up the board and maintains a list of all pieces.
      */
-    public Chess() throws NullPieceException, NoKingException
+    public Chess()
     {
         char[][] tempBoard =
         {{'♖','♘','♗','♕','♔','♗','♘','♖'},
@@ -81,7 +78,7 @@ public class Chess
      * Commences play; inputs moves in algebraic notation until a result is 
      * reached. Prints the board after each move and the result at the end.
      */
-    public void play() throws NullPieceException, NoKingException
+    public void play()
     {
         Scanner sc = new Scanner(System.in);
         int colour = 1;
@@ -135,7 +132,7 @@ public class Chess
         }
     }
     
-    public void play2() throws NullPieceException, NoKingException
+    public void play2()
     {
         Scanner sc = new Scanner(System.in);
         int colour = 1;
@@ -211,7 +208,7 @@ public class Chess
         }
     }
     
-    public void play3() throws NullPieceException, NoKingException, Exception
+    public void play3()
     {
         Scanner sc = new Scanner(System.in);
         int colour = 1;
@@ -323,7 +320,7 @@ public class Chess
      * @param input The move in formatted algebraic notation, as by prep().
      * @return A Move object of the move played.
      */
-    public Move move(int colour, String input) throws NullPieceException
+    public Move move(int colour, String input)
     {
         King king = colour == 1 ? whiteKing : blackKing;
         int len = input.length();

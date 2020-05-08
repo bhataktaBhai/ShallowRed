@@ -1,12 +1,10 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
-
 public class Main
 {
     public static void main(String[] args) throws Exception
     {
-        new Chess().play3();
+        System.out.println(new int[]{0}[4]);
+        new Chess().play();
     }
 }
