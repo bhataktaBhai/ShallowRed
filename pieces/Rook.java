@@ -17,6 +17,43 @@ public class Rook extends Piece
     }
     
     @Override
+    public boolean mightBeEyeing(int rank, int file)
+    {
+        if(rank == this.rank  &&  file == this.file)
+            return false;
+    
+        return rank == this.rank  ||  file == this.file;
+    }
+    @Override
+    public boolean isEyeing(Position pos, int rank, int file)
+    {
+        if(rank == this.rank  &&  file == this.file)
+            return false;
+        
+        if(rank == this.rank)
+        {
+            int fJump = file > this.file ? +1 : -1;
+            return clear(pos, rank, file, 0, fJump);
+        }
+        else if(file == this.file)
+        {
+            int rJump = rank > this.rank ? +1 : -1;
+            return clear(pos, rank, file, rJump, 0);
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public float value() { return VAL; }
+    @Override
+    public int[][] steps() { return STEPS; }
+    @Override
+    public boolean isFreelyMoving() { return FREELY_MOVING; }
+    @Override
+    public boolean hasMoved() { return HAS_MOVED; }
+    
+    @Override
     public float developmentPoints
         (Position pos, ArrayList<Pawn> friendlyPawns, ArrayList<Pawn> enemyPawns,
          ArrayList<Piece> friendlyPieces, ArrayList<Piece> enemyPieces)
@@ -99,38 +136,4 @@ public class Rook extends Piece
         return rookBonus + 0.6f;
     }
     
-    @Override
-    public boolean mightBeEyeing(int rank, int file)
-    {
-        if(rank == this.rank  &&  file == this.file)
-            return false;
-    
-        return (rank == this.rank) || (file == this.file);
-    }
-    @Override
-    public boolean isEyeing(Position pos, int rank, int file)
-    {
-        if(rank == this.rank  &&  file == this.file)
-            return false;
-        
-        int jump;
-        if(rank == this.rank) {
-            jump = file > this.file ? +1 : -1;
-            return !obstruction(pos, rank, file, 0, jump);
-        }
-        else if(file == this.file) {
-            jump = rank > this.rank ? +1 : -1;
-            return !obstruction(pos, rank, file, jump, 0);
-        }
-        return false;
-    }
-    
-    @Override
-    public float value() { return VAL; }
-    @Override
-    public int[][] steps() { return STEPS; }
-    @Override
-    public boolean isFreelyMoving() { return FREELY_MOVING; }
-    @Override
-    public boolean hasMoved() { return HAS_MOVED; }
 }

@@ -1,5 +1,6 @@
 package pieces;
 
+import chess.Move;
 import chess.Utils;
 import chess.Position;
 import java.util.ArrayList;
@@ -15,30 +16,29 @@ public class Pawn extends Piece
     }
 
     @Override
-    public ArrayList<int[]> eyeing(Position pos)                           //Optimised.
+    public ArrayList<int[]> eyeing(Position pos)
     {
         ArrayList<int[]> eye = new ArrayList<>();
-        if(file > 0) {
+        if(file > 0)
             eye.add(new int[]{rank + colour, file - 1});
-        }
-        if(file < 7) {
+        if(file < 7)
             eye.add(new int[]{rank + colour, file + 1});
-        }
         return eye;
     }
     
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
-        return (this.rank + colour == rank)  &&  Math.abs(this.file - file) == 1;
+        return isEyeing(null, rank, file);
     }
     @Override
-    public boolean isEyeing(Position notRequired, int rank, int file)       //Optimised.
+    public boolean isEyeing(Position notRequired, int rank, int file)
     {
-        return mightBeEyeing(rank, file);
+        return (this.rank + colour == rank)
+                &&  Math.abs(this.file - file) == 1;
     }
     @Override
-    public ArrayList<Piece> eyeingEnemies(Position pos)                    //Optimised.
+    public ArrayList<Piece> eyeingEnemies(Position pos)
     {
         ArrayList<Piece> eye = new ArrayList<>();
         if(file > 0) {
@@ -54,172 +54,119 @@ public class Pawn extends Piece
         return eye;
     }
     
+    private static void addMoves(ArrayList<int[]> moves, int rank, int file)
+    {
+        if(rank == 0  ||  rank == 7)
+        {
+            moves.add(new int[]{rank, file, 1});
+            moves.add(new int[]{rank, file, 2});
+            moves.add(new int[]{rank, file, 3});
+            moves.add(new int[]{rank, file, 4});
+        }
+        else
+            moves.add(new int[]{rank, file});
+    }
     @Override
     public ArrayList<int[]> movableTo(Position pos)
     {
         King king = pos.king;
         
-        if(pos.CHECKERS.size() > 1) {
+        if(pos.CHECKERS.size() > 1)
             return new ArrayList<>();
-        }
         
-        boolean pinned = false;
-        int rJump = 0, fJump = 0;
-        if(king.rank == this.rank) {
-            fJump = king.file > this.file ? +1 : -1;
-        }
-        else if(king.file == this.file) {
-            rJump = king.rank > this.rank ? +1 : -1;
-        }
-        else if(king.rank - king.file == this.rank - this.file) {
-            rJump = fJump = king.rank > this.rank ? +1 : -1;
-        }
-        else if(king.rank + king.file == this.rank + this.file) {
-            rJump = king.rank > this.rank ? +1 : -1;
-            fJump = -rJump;
-        }
-        if(rJump != 0  ||  fJump != 0) {
-            int r = this.rank + rJump;
-            int f = this.file + fJump;
-            while(r != king.rank  ||  f != king.file) {
-                if(pos.board[r][f] != null)
-                    break;
-                r += rJump;
-                f += fJump;
-            }
-            if(r == king.rank  &&  f == king.file) {
-                r = this.rank - rJump;
-                f = this.file - fJump;
-                while(Utils.exists(r, f)) {
-                    Piece enemySuspect = pos.board[r][f];
-                    if(enemySuspect != null) {
-                        if(enemySuspect.colour != colour  &&  enemySuspect.isFreelyMoving()) {
-                            if(enemySuspect.mightBeEyeing(rank, file)) {
-                                pinned = true;
-                            }
-                        }
-                        break;
-                    }
-                    r -= rJump;
-                    f -= fJump;
-                }
-            }
-        }
+        int[] pinned = pinned(pos);
         
         ArrayList<int[]> legalMoves = new ArrayList<>();
-        int highRank = rank + colour;
-        int rightFile = file + colour;
-        int leftFile = file - colour;
+        final int HIGH_RANK = rank + colour;
+        final int RIGHT_FILE = file + colour;
+        final int LEFT_FILE = file - colour;
         
         if(pos.CHECK) {
-            if(pinned)
+            if(pinned != null)
                 return legalMoves;
             
             Piece checker = pos.CHECKERS.get(0);
-            if(checker.isFreelyMoving()) {
+            if(checker.isFreelyMoving())
+            {
                 ArrayList<int[]> blocks = Utils.squaresBetween(king.rank, king.file, checker.rank, checker.file);
-                for(int square[] : blocks) {
-                    if(file == square[1]) {
-                        if(highRank == square[0])
+                for(int square[] : blocks)
+                {
+                    if(file == square[1])
+                    {
+                        if(HIGH_RANK == square[0])
                             legalMoves.add(square);
-                        else if(highRank + colour == square[0]  &&  pos.board[highRank][file] == null)
+                        else if(relativeRank() == 1
+                                &&  HIGH_RANK + colour == square[0]
+                                &&  pos.board[HIGH_RANK][file] == null)
                             legalMoves.add(square);
                         break;
                     }
                 }
             }
             
-            if(this.isEyeing(pos, checker.rank, checker.file)) {
+            if(this.isEyeing(pos, checker.rank, checker.file))
                 legalMoves.add(new int[]{checker.rank, checker.file});
-            }
             
-            else if(checker == pos.doubleMover  &&  checker.rank == rank) {
-                if(checker.file == rightFile  ||  checker.file == leftFile)
-                    legalMoves.add(new int[]{highRank, checker.file});
-            }
+            else if(checker == pos.doubleMover  &&  checker.rank == rank)
+                if(checker.file == RIGHT_FILE  ||  checker.file == LEFT_FILE)
+                    legalMoves.add(new int[]{HIGH_RANK, checker.file});
             
             return legalMoves;
         }
         
         
         //moving forward.
-        if(!pinned  ||  fJump == 0) {
-            if(pos.board[rank + colour][file] == null) {
-                if(relativeRank() == 6) {
-                    legalMoves.add(new int[]{highRank, file, 1});
-                    legalMoves.add(new int[]{highRank, file, 2});
-                    legalMoves.add(new int[]{highRank, file, 3});
-                    legalMoves.add(new int[]{highRank, file, 4});
-                }
-                else {
-                    legalMoves.add(new int[]{highRank, file});
-                    if(relativeRank() == 1  &&  pos.board[highRank + colour][file] == null) {
-                        legalMoves.add(new int[]{highRank + colour, file});
-                    }
-                }
+        if(pinned == null  ||  pinned[1] == 0)
+        {
+            if(pos.board[HIGH_RANK][file] == null)
+            {
+                addMoves(legalMoves, HIGH_RANK, file);
+                if(relativeRank() == 1
+                        &&  pos.board[HIGH_RANK + colour][file] == null)
+                    addMoves(legalMoves, HIGH_RANK + colour, file);
             }
         }
         
         //enPassant
-        if(pos.doubleMover != null  &&  pos.doubleMover.rank == this.rank) {
-            if(pos.doubleMover.file == leftFile) {
-                if(!pinned  ||  rJump == -fJump) {
-                    legalMoves.add(new int[]{highRank, leftFile});
-                }
-            }
-            if(pos.doubleMover.file == rightFile) {
-                if(!pinned  ||  rJump == fJump) {
-                    legalMoves.add(new int[]{highRank, rightFile});
-                }
-            }
+        if(pos.doubleMover != null  &&  pos.doubleMover.rank == this.rank)
+        {
+            if(pos.doubleMover.file == LEFT_FILE)
+                if(pinned == null  ||  pinned[0] + pinned[1] == 0)
+                    legalMoves.add(new int[]{HIGH_RANK, LEFT_FILE});
+            if(pos.doubleMover.file == RIGHT_FILE)
+                if(pinned == null  ||  pinned[0] - pinned[1] == 0);
+                    legalMoves.add(new int[]{HIGH_RANK, RIGHT_FILE});
         }
         
-        //capturing forward left (from player's perspective).
-        if(!pinned  ||  rJump == -fJump) {
-            Piece enemySuspect = Utils.get(pos.board, highRank, leftFile);
-            if(enemySuspect != null  &&  enemySuspect.colour != colour) {
-                if(relativeRank() == 6) {
-                    legalMoves.add(new int[]{highRank, leftFile, 1});
-                    legalMoves.add(new int[]{highRank, leftFile, 2});
-                    legalMoves.add(new int[]{highRank, leftFile, 3});
-                    legalMoves.add(new int[]{highRank, leftFile, 4});
-                }
-                else {
-                    legalMoves.add(new int[]{highRank, leftFile});
-                }
-            }
+        //capturing forward left (from player's perspective)
+        if(pinned == null  ||  pinned[0] + pinned[1] == 0)
+        {
+            Piece enemySuspect = Utils.get(pos.board, HIGH_RANK, LEFT_FILE);
+            if(enemySuspect != null  &&  enemySuspect.colour != colour)
+                addMoves(legalMoves, HIGH_RANK, LEFT_FILE);
         }
-        //capturing forward right (from player's perspective).
-        if(!pinned  ||  rJump == fJump) {
-            Piece enemySuspect = Utils.get(pos.board, highRank, rightFile);
-            if(enemySuspect != null  &&  enemySuspect.colour != colour) {
-                if(relativeRank() == 6) {
-                    legalMoves.add(new int[]{highRank, rightFile, 1});
-                    legalMoves.add(new int[]{highRank, rightFile, 2});
-                    legalMoves.add(new int[]{highRank, rightFile, 3});
-                    legalMoves.add(new int[]{highRank, rightFile, 4});
-                }
-                else {
-                    legalMoves.add(new int[]{highRank, rightFile});
-                }
-            }
+        
+        //capturing forward right (from player's perspective)
+        if(pinned == null  ||  pinned[0] - pinned[1] == 0)
+        {
+            Piece enemySuspect = Utils.get(pos.board, HIGH_RANK, RIGHT_FILE);
+            if(enemySuspect != null  &&  enemySuspect.colour != colour)
+                addMoves(legalMoves, HIGH_RANK, RIGHT_FILE);
         }
         
         return legalMoves;
     }
     
     @Override
-    public Piece move(int[] newLocation)
+    public Piece move(Move move)
     {
-        if(newLocation.length > 2  &&  newLocation[2] != 0) {
-            return promote(newLocation[2], newLocation[0], newLocation[1]);
-        }
+        if(move.promotion() != 0)
+            return promote(move.promotion(), move.rank(), move.file());
         
-        Pawn p = new Pawn(symbol, newLocation[0], newLocation[1]);
-        return p;
+        return move(move.rank(), move.file());
     }
 
-    Piece promote(int piece, int rank, int file)
+    private Piece promote(int piece, int rank, int file)
     {
         char newSymbol = '\u0000';
         switch(piece) {
@@ -236,51 +183,47 @@ public class Pawn extends Piece
                 newSymbol = '♘';
                 break;
         }
-        if(colour == -1) {
+        
+        if(colour == -1)
             newSymbol += 6;
-        }
+        
         return getPiece(newSymbol, rank, file, true);
     }
 
     public boolean isDoubled(ArrayList<Pawn> friendlyPawns)
     {
-        for(Pawn pawn : friendlyPawns) {
-            if(pawn.file == file  &&  pawn != this) {
+        for(Pawn pawn : friendlyPawns)
+            if(pawn.file == file  &&  pawn != this)
                 return true;
-            }
-        }
         return false;
     }
     
     public boolean isIsolated(ArrayList<Pawn> friendlyPawns)
     {
-        for(Pawn pawn : friendlyPawns) {
-            if(pawn.file == file + 1  ||  pawn.file == file - 1) {
+        for(Pawn pawn : friendlyPawns)
+            if(Math.abs(pawn.file - file) == 1)
                 return false;
-            }
-        }
         return true;
     }
     
     public boolean isBackward(ArrayList<Pawn> friendlyPawns)
     {
-        for(Pawn pawn : friendlyPawns) {
-            if(pawn.file == file + 1  ||  pawn.file == file - 1) {
-                if(pawn.relativeRank() <= relativeRank()) {
+        for(Pawn pawn : friendlyPawns)
+            if(Math.abs(pawn.file - file) == 1)
+                if(pawn.relativeRank() <= this.relativeRank())
                     return false;
-                }
-            }
-        }
         return true;
     }
     
     public float developmentPoints()
     {
-        switch(relativeRank()) {
+        switch(relativeRank())
+        {
             case 1:
                 return 0;
             case 2:
-                switch(file) {
+                switch(file)
+                {
                     case 0:
                     case 7:
                         return 0.07f;
@@ -291,7 +234,8 @@ public class Pawn extends Piece
                         return 0.1f;
                 }
             case 3:
-                switch(file) {
+                switch(file)
+                {
                     case 0:
                     case 7:
                         return 0.07f;
@@ -305,7 +249,8 @@ public class Pawn extends Piece
                         return 0.1f;
                 }
             case 4:
-                switch(file) {
+                switch(file)
+                {
                     case 0:
                     case 7:
                         return 0.12f;
@@ -319,7 +264,8 @@ public class Pawn extends Piece
                         return 0.24f;
                 }
             case 5:
-                switch(file) {
+                switch(file)
+                {
                     case 0:
                     case 7:
                         return 0.18f;
@@ -330,7 +276,8 @@ public class Pawn extends Piece
                         return 0.21f;
                 }
             case 6:
-                switch(file) {
+                switch(file)
+                {
                     case 0:
                     case 7:
                         return 0.6f;

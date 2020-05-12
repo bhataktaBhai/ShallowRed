@@ -22,19 +22,14 @@ public class Bishop extends Piece
         return 0;
     }
     
-    //@Override
-    public boolean canMoveInDirection(int rJump, int fJump)
-    {
-        return rJump != 0  &&  (rJump == fJump  ||  rJump == -fJump);
-    }
     @Override
     public boolean mightBeEyeing(int rank, int file)
     {
-        if(rank == this.rank)
+        if(rank == this.rank  ||  file == this.file)
             return false;
-    
-        //      y - x = c  =>  slope = 1                  y + x = c  =>  slope = -1
-        return (this.rank - this.file == rank - file) || (this.rank + this.file == rank + file);
+        
+        return (this.rank - this.file == rank - file)
+                ||  (this.rank + this.file == rank + file);
     }
     @Override
     public boolean isEyeing(Position pos, int rank, int file)
@@ -42,21 +37,16 @@ public class Bishop extends Piece
         if(rank == this.rank  ||  file == this.file)
             return false;
         
-        if(this.rank - this.file == rank - file) {
-            int rJump, fJump;
-            if(this.rank < rank)
-                rJump = fJump = +1;
-            else
-                rJump = fJump = -1;
-            return !obstruction(pos, rank, file, rJump, fJump);
+        if(this.rank - this.file == rank - file)
+        {
+            int jump = rank > this.rank ? 1 : - 1;
+            return clear(pos, rank, file, jump, jump);
         }
-        else if(this.rank + this.file == rank + file) {
+        else if(this.rank + this.file == rank + file)
+        {
             int rJump, fJump;
-            if(this.rank < rank)
-                fJump = -(rJump = 1);
-            else
-                rJump = -(fJump = 1);
-            return !obstruction(pos, rank, file, rJump, fJump);
+            fJump = -(rJump = rank > this.rank ? 1 : -1);
+            return clear(pos, rank, file, rJump, fJump);
         }
         return false;
     }
