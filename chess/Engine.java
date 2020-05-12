@@ -113,8 +113,8 @@ public class Engine
         //System.out.println("Initialising tree...");
         ArrayList<MoveData> tree = new ArrayList<>();
         //Chess.print(pos.board);
-        for(int i = 0; i < pos.allPieces.size(); i++) {
-            Piece piece = pos.allPieces.get(i);
+        for(int i = 0; i < pos.pieces.size(); i++) {
+            Piece piece = pos.pieces.get(i);
             if(piece.colour != pos.turn) {
                 continue;
             }
@@ -122,7 +122,7 @@ public class Engine
             for(int[] move : moves) {
                 
                 boolean capture = false, forcing = false, doubleMove = false;
-                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.allPieces.clone();
+                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.pieces.clone();
                 Piece newPiece = newPieces.get(i);
                 
                 newPieces.remove(i);
@@ -160,14 +160,14 @@ public class Engine
                     }
                 }
                 
-                Piece movedPiece = newPiece.move(move);
+                Piece movedPiece = newPiece.move(new Move(newPiece, move));
                 newPieces.add(movedPiece);
                 
                 Position newPosition = new Position (newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
                 if(newPosition.CHECK)
                     forcing = true;
                 else if(capture) {
-                    forcing = newPosition.underCheck(movedPiece);
+                    forcing = newPosition.underAttack(movedPiece.rank, movedPiece.file);
                 }
                 MoveData possibleMove = new MoveData(newPosition, newPiece, move);
                 possibleMove.setTree(plantTree(newPosition, forcing  &&  layer < 2 ? layer : layer - 1));

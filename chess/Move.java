@@ -9,8 +9,12 @@ public class Move
     
     Move(Piece p, int[] move)
     {
-        ORIGIN = (p.rank << 3) + p.file;
-        DESTIN = (move[0] << 6) + (move[1] << 3) + (move.length > 2 ? move[2] : 0);
+        this(p, move[0], move[1], move.length > 2 ? move[2] : 0);
+    }
+    Move(Piece p, int rank, int file, int promotion)
+    {
+        ORIGIN = (p.rank << 3) + (p.file);
+        DESTIN = (rank << 6) + (file << 3) + (promotion);
     }
     
     public int originRank() { return ORIGIN >> 3; }
@@ -20,26 +24,37 @@ public class Move
     public int file() { return (DESTIN >> 3) & 0b111; }
     public int promotion() { return DESTIN & 0b111;}
     
-    public int[] move()
-    {
-        if(promotion() == 0) {
-            return new int[]{rank(), file()};
-        }
-        return new int[]{rank(), file(), promotion()};
-    }
-    
     public boolean equals(Move m)
     {
         return (m == null ? false : this.ORIGIN == m.ORIGIN  &&  this.DESTIN == m.DESTIN); 
     }
+    
+    private char promotionChar()
+    {
+        switch(promotion())
+        {
+            case 1:
+                return 'Q';
+            case 2:
+                return 'R';
+            case 3:
+                return 'B';
+            case 4:
+                return 'N';
+            default:
+                return '\u0000';
+        }
+    }
     public String toString(Piece[][] board)
     {
         Piece MOVER = board[originRank()][originFile()];
-        return MOVER.toString() + Utils.getMove(move());
+        return String.format("%s%c%d%c", MOVER.toString(), file() + 'a',
+                                    rank() + 1, promotionChar());
     }
     @Override
     public String toString()
     {
-        return Utils.getMove(new int[]{originRank(), originFile()}) + " --> "+ Utils.getMove(move());
+        return String.format("%c%d%s%c%d%c", originFile() + 'a', originRank() + 1,
+                        " --> ", file() + 'a', rank() + 1, promotionChar());
     }
 }

@@ -132,8 +132,8 @@ public class Engine2
         if(layer < 1)
             return null;
         ArrayList<MoveData> tree = new ArrayList<>();
-        for(int i = 0; i < pos.allPieces.size(); i++) {
-            Piece piece = pos.allPieces.get(i);
+        for(int i = 0; i < pos.pieces.size(); i++) {
+            Piece piece = pos.pieces.get(i);
             if(piece.colour != pos.turn) {
                 continue;
             }
@@ -144,7 +144,7 @@ public class Engine2
                     continue;
                 
                 boolean capture = false, doubleMove = false;
-                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.allPieces.clone();
+                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.pieces.clone();
                 newPieces.remove(i);
                 
                 //capture...
@@ -180,11 +180,11 @@ public class Engine2
                     }
                 }
                 
-                Piece movedPiece = piece.move(move);
+                Piece movedPiece = piece.move(new Move(piece, move));
                 newPieces.add(movedPiece);
                 
                 Position newPosition = new Position(newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
-                capture = capture  &&  newPosition.underCheck(movedPiece);
+                capture = capture  &&  newPosition.underAttack(movedPiece.rank, movedPiece.file);
                 int newLayer = layer > 1 ? layer - 1 : (newPosition.CHECK ? 2 : (capture ? 1 : 0));
                 
                 MoveData possibleMove = new MoveData(piece, move, newPosition.eval());
