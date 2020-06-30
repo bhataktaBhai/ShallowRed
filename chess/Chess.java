@@ -1,13 +1,8 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
-import pieces.King;
-import pieces.Pawn;
-import pieces.Piece;
+import pieces.*;
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javafx.util.Pair;
 
 /**
@@ -18,22 +13,11 @@ import javafx.util.Pair;
 public class Chess
 {
     /** The current state of the chessboard. */
-    public Position currentPos = null;
-    
-    /** A 2D Array, of {@code Piece} objects, the size of a chessboard. */
-    public Piece[][] board = new Piece[8][8];
-
-    /** A list of all the Pieces on the chessboard. */
-    public ArrayList<Piece> allPieces = new ArrayList<>();
-
+    public Position position = null;
 
     /** A list of all Positions that ever occurred to check for
      * Draw by Threefold Repetition. */
     public ArrayList<Pair<Position, Integer>> allPositions = new ArrayList<>();
-
-    private King whiteKing = null;
-    private King blackKing = null;
-    private Pawn doubleMover;
 
     /** Number of moves elapsed to check for the Fifty Move Rule. */
     public int numOfMoves = 0;
@@ -42,8 +26,9 @@ public class Chess
     /**
      * Sets up the board and maintains a list of all pieces.
      */
-    public Chess() throws NullPieceException, NoKingException
+    public Chess()
     {
+        ArrayList<Piece> pieces = new ArrayList<>(32);
         char[][] tempBoard =
         {{'♖','♘','♗','♕','♔','♗','♘','♖'},
          {'♙','♙','♙','♙','♙','♙','♙','♙'},
@@ -59,21 +44,12 @@ public class Chess
             {
                 if(tempBoard[i][j] != ' ') {
                     Piece piece = Piece.getPiece(tempBoard[i][j], i, j, false);
-                    if(piece instanceof King) {
-                        if(piece.colour == 1) {
-                            whiteKing = (King)piece;
-                        }
-                        else {
-                            blackKing = (King)piece;
-                        }
-                    }
-                    allPieces.add(piece);
+                    pieces.add(piece);
                 }
             }
         }
-        currentPos = new Position(allPieces, 1, null);
-        board = currentPos.board;
-        allPositions.add(new Pair(currentPos, 1));
+        position = new Position(pieces, 1, null);
+        allPositions.add(new Pair(position, 1));
         numOfMoves = 0;
     }
 
@@ -81,34 +57,34 @@ public class Chess
      * Commences play; inputs moves in algebraic notation until a result is 
      * reached. Prints the board after each move and the result at the end.
      */
-    public void play() throws NullPieceException, NoKingException
+    public void play()
     {
         Scanner sc = new Scanner(System.in);
         int colour = 1;
         boolean checkmate, underCheck, stuck, unwinnable, fifty, threefold, end;
         checkmate = underCheck = stuck = unwinnable = fifty = threefold = end = false;
-        Utils.print(board);
+        System.out.println(position);
         
         while(!end)
         {
             System.out.println((colour == 1 ? "WHITE" : "BLACK") + " to move.");
             String input = sc.next();
             input = prep(input);
-            if(move(colour, input) == null) {
+            Move move = move(colour, input);
+            if(move == null)
                 continue;
-            }
+            
             colour *= -1;
-            currentPos = new Position(allPieces, colour, doubleMover);
-            board = Utils.getBoard(allPieces);
-            underCheck = currentPos.CHECK;
-            stuck = currentPos.stuck();
+            position = position.move(move);
+            underCheck = position.CHECK;
+            stuck = position.stuck();
             checkmate = underCheck  &&  stuck;
-            unwinnable = !currentPos.winnable();
+            unwinnable = !position.winnable();
             fifty = numOfMoves > 99;
             threefold = threefoldRepetition();
             end = stuck  ||  unwinnable  ||  fifty  ||  threefold;
-            Utils.print(board);
-            System.out.println(Utils.getCapturedPieces(currentPos.allPieces).toString());
+            System.out.println(position);
+            System.out.println(Utils.getCapturedPieces(position.pieces).toString());
             if(underCheck) {
                 System.out.println("CHECK!");
             }
@@ -135,163 +111,6 @@ public class Chess
         }
     }
     
-    public void play2() throws NullPieceException, NoKingException
-    {
-        Scanner sc = new Scanner(System.in);
-        int colour = 1;
-        boolean checkmate, check, stuck, unwinnable, fifty, threefold, end;
-        checkmate = check = stuck = unwinnable = fifty = threefold = end = false;
-        Engine engine = new Engine();
-        Utils.print(board);
-        
-        while(!end)
-        {
-            System.out.println((colour == 1 ? "WHITE" : "BLACK") + " to move.");
-            
-            if(colour == -1) {
-                String input = sc.next();
-                input = prep(input);
-                if(move(colour, input) == null) {
-                    continue;
-                }
-                currentPos = new Position(allPieces, -colour, doubleMover);
-            }
-            
-            else {
-                System.out.println("Let the engine move.");
-                currentPos = engine.play(currentPos);
-                allPieces.clear();
-                for(Piece piece : currentPos.allPieces) {
-                    allPieces.add(piece);
-                    if(piece instanceof King) {
-                        if(piece.colour == 1) {
-                            whiteKing = (King)piece;
-                        }
-                        else {
-                            blackKing = (King)piece;
-                        }
-                    }
-                }
-            }
-            
-            board = Utils.getBoard(allPieces);
-            colour *= -1;
-            check = currentPos.CHECK;
-            stuck = currentPos.stuck();
-            checkmate = check  &&  stuck;
-            unwinnable = !currentPos.winnable();
-            fifty = numOfMoves > 99;
-            threefold = threefoldRepetition();
-            end = stuck  ||  unwinnable  ||  fifty  ||  threefold;
-            Utils.print(board);
-            System.out.println(Utils.getCapturedPieces(currentPos.allPieces).toString());
-            if(check) {
-                System.out.println("CHECK!");
-            }
-        }
-        
-        if(checkmate) {
-            System.out.println("And MATE!");
-            System.out.println(colour == 1 ? "0-1" : "1-0");
-        }
-        else {
-            if(stuck) {
-                System.out.println("Stalemate.");
-            }
-            if(unwinnable) {
-                System.out.println("Insufficient material.");
-            }
-            if(fifty) {
-                System.out.println("Fifty Moves w/o Pawn Move or Capture");
-            }
-            if(threefold) {
-                System.out.println("Threefold Repetition.");
-            }
-            System.out.println("½ - ½");
-        }
-    }
-    
-    public void play3() throws NullPieceException, NoKingException, Exception
-    {
-        Scanner sc = new Scanner(System.in);
-        int colour = 1;
-        boolean checkmate, check, stuck, unwinnable, fifty, threefold, end;
-        checkmate = check = stuck = unwinnable = fifty = threefold = end = false;
-        Engine2 engine = new Engine2();
-        Utils.print(board);
-        
-        Move lastMove = null;
-        while(!end)
-        {
-            System.out.println((colour == 1 ? "WHITE" : "BLACK") + " to move.");
-            
-            if(colour == -1) {
-                String input = sc.next();
-                input = prep(input);
-                lastMove = move(colour, input);
-                if(lastMove == null) {
-                    continue;
-                }
-                currentPos = new Position(allPieces, -colour, doubleMover);
-            }
-            
-            else {
-                System.out.println("Let the engine move.");
-                Move move = engine.play(currentPos, lastMove);
-                System.out.println(move.toString(board));
-                currentPos = currentPos.move(move);
-                allPieces.clear();
-                for(Piece piece : currentPos.allPieces) {
-                    allPieces.add(piece);
-                    if(piece instanceof King) {
-                        if(piece.colour == 1) {
-                            whiteKing = (King)piece;
-                        }
-                        else {
-                            blackKing = (King)piece;
-                        }
-                    }
-                }
-            }
-            
-            board = Utils.getBoard(allPieces);
-            colour *= -1;
-            check = currentPos.CHECK;
-            stuck = currentPos.stuck();
-            checkmate = check  &&  stuck;
-            unwinnable = !currentPos.winnable();
-            fifty = numOfMoves > 99;
-            threefold = threefoldRepetition();
-            end = stuck  ||  unwinnable  ||  fifty  ||  threefold;
-            Utils.print(board);
-            System.out.println(Utils.getCapturedPieces(currentPos.allPieces).toString());
-            System.out.printf("%.2f\n", currentPos.eval());
-            if(check) {
-                System.out.println("CHECK!");
-            }
-        }
-        
-        if(checkmate) {
-            System.out.println("And MATE!");
-            System.out.println(colour == 1 ? "0-1" : "1-0");
-        }
-        else {
-            if(stuck) {
-                System.out.println("Stalemate.");
-            }
-            if(unwinnable) {
-                System.out.println("Insufficient material.");
-            }
-            if(fifty) {
-                System.out.println("Fifty Moves w/o Pawn Move or Capture");
-            }
-            if(threefold) {
-                System.out.println("Threefold Repetition.");
-            }
-            System.out.println("½ - ½");
-        }
-    }
-
     /**
      * Prepares the input move to be parsed. Removes optional annotations,
      * such as {@code "x","+","++","#","!","?","?!","!?"," e.p."}, and prefixes
@@ -323,16 +142,14 @@ public class Chess
      * @param input The move in formatted algebraic notation, as by prep().
      * @return A Move object of the move played.
      */
-    public Move move(int colour, String input) throws NullPieceException
+    public Move move(int colour, String input)
     {
-        King king = colour == 1 ? whiteKing : blackKing;
+        King king = position.king;
         int len = input.length();
-        doubleMover = null;
         
         //for when the user enters only one of destination co-ordinates.
-        if(len < 3) {
+        if(len < 3)
             return null;
-        }
         
         // "P optionalFile optionalRank destFile destRank promotionPiece"
         boolean pawnPromotion = input.matches("P[a-h]?[2-7]?[a-h][18][NBRQ]");
@@ -341,11 +158,20 @@ public class Chess
         // "0-0" | "0-0-0" | "O-O" | "O-O-O"
         boolean castling = input.matches("(0-0(-0)?)|(O-O(-O)?)");
         
-        if(normalMove  ||  pawnPromotion) {
+        if(normalMove  ||  pawnPromotion)
+        {
             char typeOfPiece = input.charAt(0);
+            if(typeOfPiece != 'K'  &&  position.CHECKERS.size() > 1)
+            {
+                System.out.println("Double check. Must move King.");
+                return null;
+            }
+            
             int promotionPiece = 0;
-            if(pawnPromotion) {
-                switch(input.charAt(--len)) {
+            if(pawnPromotion)
+            {
+                switch(input.charAt(len - 1))
+                {
                     case 'Q':
                         promotionPiece = 1;
                         break;
@@ -359,147 +185,88 @@ public class Chess
                         promotionPiece = 4;
                         break;
                 }
-                input = input.substring(0, len);
+                input = input.substring(0, --len);
             }
 
-            int originalFile = -1, originalRank = -1;
+            int originFile = -1, originRank = -1;
 
             //len >= 3 (Piece, destRank, destFile are musts).
             //if len == 4, one extra piece of information (rank | file).
             //if len == 5, two extra pieces of information (rank & file).
-            if(len == 4) {
-                if(input.charAt(1) >= 'a'  &&  input.charAt(1) <= 'h') {
-                    originalFile = input.charAt(1) - 'a';
-                }
-                else {
-                    originalRank = input.charAt(1) - '1';
-                }
-            }
-            else if(len == 5) {
-                originalFile = input.charAt(1) - 'a';
-                originalRank = input.charAt(2) - '1';
+            if(len == 4)
+                if(input.charAt(1) >= 'a'  &&  input.charAt(1) <= 'h')
+                    originFile = input.charAt(1) - 'a';
+                else
+                    originRank = input.charAt(1) - '1';
+            else if(len == 5)
+            {
+                originFile = input.charAt(1) - 'a';
+                originRank = input.charAt(2) - '1';
             }
 
-            int destRank = input.charAt(len - 1) - '1';
-            int destFile = input.charAt(len - 2) - 'a';
-            Piece enemyPiece = board[destRank][destFile];
+            int destinRank = input.charAt(len - 1) - '1';
+            int destinFile = input.charAt(len - 2) - 'a';
+            Piece enemyPiece = position.board[destinRank][destinFile];
 
-            if(typeOfPiece != 'K'  &&  currentPos.CHECKERS.size() > 1) {
-                System.out.println("Double check. Must move King.");
-                return null;
-            }
                 
-            //enemyPiece is not really an enemy piece. Betrayal ain't a thing.
-            if(enemyPiece != null  &&  enemyPiece.colour == colour) {
+            //when enemyPiece is not really an enemy piece
+            if(enemyPiece != null  &&  enemyPiece.colour == colour)
+            {
                 System.out.println("Cannot capture one's own piece.");
                 return null;
             }
 
-            //System.out.println("" + (char)(destFile + 'a') + (destRank + 1));
             ArrayList<Piece> worthyMovers = new ArrayList<>();
-            for(Piece piece : allPieces) {
-                if(piece.colour == colour  &&  piece.instanceOf(typeOfPiece)) {
-                    if(originalFile != -1  &&  originalFile != piece.file) {
+            for(Piece piece : position.pieces)
+            {
+                if(piece.colour == colour  &&  Utils.instanceOf(piece, typeOfPiece))
+                {
+                    if(originFile != -1  &&  originFile != piece.file)
                         continue;
-                    }
-                    if(originalRank != -1  &&  originalRank != piece.rank) {
+                    if(originRank != -1  &&  originRank != piece.rank)
                         continue;
-                    }
-                    if(piece.canMoveTo(currentPos, destRank, destFile)) {
-                        if(piece instanceof Pawn  &&  destFile != piece.file  &&  enemyPiece == null) {
-                            enemyPiece = board[piece.rank][destFile];
-                        }
-                        
+                    if(piece.canMoveTo(position, destinRank, destinFile))
                         worthyMovers.add(piece);
-                    }
                 }
             }
 
-            if(worthyMovers.size() > 1) {
-                System.out.println("Ambiguity: " + worthyMovers.size() + " pieces of the same kind can perform the specified move.");
+            if(worthyMovers.size() > 1)
+            {
+                System.out.println("Ambiguity: " + worthyMovers.size()
+                        + " pieces of the same kind can perform the specified move.");
                 return null;
             }
-            else if(worthyMovers.isEmpty()) {
+            else if(worthyMovers.isEmpty())
+            {
                 System.out.println("Illegal move.");
-                System.out.println(currentPos);
+                System.out.println(position);
                 return null;
             }
 
             Piece theMover = worthyMovers.get(0);
-            allPieces.remove(theMover);
             
-            int[] move;
-            if(promotionPiece != 0)
-                move = new int[]{destRank, destFile, promotionPiece};
+            if(enemyPiece != null  ||  theMover instanceof Pawn)
+            {
+                numOfMoves = 0;
+                allPositions.clear();
+            }
             else
-                move = new int[]{destRank, destFile};
-            
-            allPieces.add(theMover.move(move));
-            if(enemyPiece != null) {
-                allPieces.remove(enemyPiece);
-                //for 50 Move and 3x Rep.
-                numOfMoves = 0;
-                allPositions.clear();
-            }
-            
-            if(theMover instanceof Pawn) {
-                numOfMoves = 0;
-                allPositions.clear();
-                if(Math.abs(destRank - theMover.rank) == 2) {
-                    doubleMover = (Pawn) theMover;
-                }
-            }
-            else {
                 numOfMoves++;
-            }
             
-            return new Move(theMover, move);
+            return new Move(theMover, destinRank, destinFile, promotionPiece);
         }
 
 
-        if(castling) {
-            if(len == 3  &&  king.canCastleShort(currentPos)) {
-                allPieces.remove(king);
-                int[] move = {king.rank, 6};
-                king = (King) king.move(move);
-                allPieces.add(king);
-                if(king.colour == 1)
-                    whiteKing = king;
-                else 
-                    blackKing = king;
-                for(Piece piece : allPieces) {
-                    if(piece.rank == king.rank  &&  piece.file == 7) {
-                        allPieces.remove(piece);
-                        allPieces.add(piece.move(new int[]{piece.rank, 5}));
-                        break;
-                    }
-                }
-                return new Move(king, move);
-            }
-            if(len == 5  &&  king.canCastleLong(currentPos)) {
-                allPieces.remove(king);
-                int[] move = {king.rank, 2};
-                king = (King) king.move(move);
-                allPieces.add(king);
-                if(king.colour == 1)
-                    whiteKing = king;
-                else 
-                    blackKing = king;
-                for(Piece piece : allPieces) {
-                    if(piece.rank == king.rank  &&  piece.file == 0) {
-                        allPieces.remove(piece);
-                        allPieces.add(piece.move(new int[]{piece.rank, 3}));
-                        break;
-                    }
-                }
-                return new Move(king, move);
-            }
-            System.out.println("Castling illegal.");
-        }
+        if(castling)
+            if(len == 3  &&  king.canCastleShort(position))
+                return new Move(king, king.rank, 6, 0);
+            else if(len == 5  &&  king.canCastleLong(position))
+                return new Move(king, king.rank, 2, 0);
+            else
+                System.out.println("Castling illegal.");
 
-        else {
+        else
             System.out.println("Enter valid algebraic notation.");
-        }
 
         return null;
     }
@@ -512,14 +279,14 @@ public class Chess
     {
         for(int i = 0; i < allPositions.size(); i++) {
             Pair<Position, Integer> pair = allPositions.get(i);
-            if(currentPos.equals(pair.getKey())) {
+            if(position.equals(pair.getKey())) {
                 System.out.println("WOOHOO!");
                 allPositions.remove(i);
-                allPositions.add(new Pair<>(currentPos, pair.getValue() + 1));
+                allPositions.add(new Pair<>(position, pair.getValue() + 1));
                 return pair.getValue() > 1;
             }
         }
-        allPositions.add(new Pair<>(currentPos, 1));
+        allPositions.add(new Pair<>(position, 1));
         return false;
     }
 }

@@ -3,10 +3,11 @@ package pieces;
 import chess.Utils;
 import chess.Position;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class King extends Piece
 {
-    private static final int VAL = 1000;
+    private static final int VAL = Integer.MAX_VALUE;
     private static final boolean FREELY_MOVING = false;
     private final boolean HAS_MOVED;
 
@@ -17,23 +18,25 @@ public class King extends Piece
     }
 
     @Override
-    public ArrayList<int[]> eyeing(Position pos)                           //Optimised.
+    public ArrayList<int[]> eyeing(Position pos)
     {
         ArrayList<int[]> eye = new ArrayList<>();
-        for(int[] step : ALL_DIRECTIONS) {
+        for(int[] step : ALL_DIRECTIONS)
+        {
             int[] move = {rank + step[0], file + step[1]};
-            if(Utils.exists(move[0], move[1])) {
+            if(Utils.exists(move[0], move[1]))
                 eye.add(move);
-            }
         }
         return eye;
     }
     @Override
-    public ArrayList<Piece> eyeingEnemies(Position pos)                    //Optimised.
+    public ArrayList<Piece> eyeingEnemies(Position pos)
     {
         ArrayList<Piece> eye = new ArrayList<>();
-        for(int[] step : ALL_DIRECTIONS) {
-            if(Utils.exists(rank + step[0], file + step[1])) {
+        for(int[] step : ALL_DIRECTIONS)
+        {
+            if(Utils.exists(rank + step[0], file + step[1]))
+            {
                 Piece enemy = pos.board[rank + step[0]][file + step[1]];
                 if(enemy != null  &&  enemy.colour != colour)
                     eye.add(enemy);
@@ -42,132 +45,102 @@ public class King extends Piece
         return eye;
     }
 
-    //@Override
-    public boolean canMoveInDirection(int rJump, int fJump)
-    {
-        return rJump / 2 == 0  &&  fJump / 2 == 0;
-    }
     @Override
     public boolean mightBeEyeing(int rank, int file)
+    {
+        return isEyeing(null, rank, file);
+    }
+    @Override
+    public boolean isEyeing(Position notRequired, int rank, int file)
     {
         if(rank == this.rank  &&  file == this.file)
             return false;
     
-        int rankDiff = Math.abs(rank - this.rank);
-        int fileDiff = Math.abs(file - this.file);
-        return (rankDiff < 2  &&  fileDiff < 2);
-    }
-    @Override
-    public boolean isEyeing(Position notRequired, int rank, int file)       //Optimised.
-    {
-        return mightBeEyeing(rank, file);
+        int rJump = Math.abs(rank - this.rank);
+        int fJump = Math.abs(file - this.file);
+        return rJump < 2  &&  fJump < 2;
     }
 
     @Override
     public ArrayList<int[]> movableTo(Position pos)
     {
         ArrayList<int[]> legalMoves = new ArrayList<>();
-        Integer skip_r_1 = null, skip_f_1 = null;
-        Integer skip_r_2 = null, skip_f_2 = null;
-        if(pos.CHECK) {
+        int[] skip = null, skip2 = null;
+        if(pos.CHECK)
+        {
             Piece checker = pos.CHECKERS.get(0);
-            if(checker.isFreelyMoving()) {
-                skip_r_1 = (int) Math.signum(rank - checker.rank);
-                skip_f_1 = (int) Math.signum(file - checker.file);
+            if(checker.isFreelyMoving())
+            {
+                //from the King to checker, so that the square opposite to
+                //checker, shielded by the King, is skipped.
+                skip = new int[2];
+                skip[0] = (int) Math.signum(rank - checker.rank);
+                skip[1] = (int) Math.signum(file - checker.file);
             }
-            if(pos.CHECKERS.size() > 1) {
+            if(pos.CHECKERS.size() > 1)
+            {
                 checker = pos.CHECKERS.get(1);
-                if(checker.isFreelyMoving()) {
-                    skip_r_2 = (int) Math.signum(rank - checker.rank);
-                    skip_f_2 = (int) Math.signum(file - checker.file);
+                if(checker.isFreelyMoving())
+                {
+                    skip2 = new int[2];
+                    skip2[0] = (int) Math.signum(rank - checker.rank);
+                    skip2[1] = (int) Math.signum(file - checker.file);
                 }
             }
         }
         
-        outer:
-        for(int[] step : ALL_DIRECTIONS) {
-            if(skip_r_1 != null  &&  step[0] == skip_r_1  &&  step[1] == skip_f_1)
-                continue;
-            if(skip_r_2 != null  &&  step[0] == skip_r_2  &&  step[1] == skip_f_2)
+        for(int[] step : ALL_DIRECTIONS)
+        {
+            if(Arrays.equals(skip, step)  ||  Arrays.equals(skip2, step))
                 continue;
             int[] move = {rank + step[0], file + step[1]};
-            if(Utils.exists(move[0], move[1])) {
+            if(Utils.exists(move[0], move[1]))
+            {
                 Piece moveSuspect = pos.board[move[0]][move[1]];
-                if((moveSuspect == null)  ||  (moveSuspect.colour != colour)) {
-                    for(int i = 0; i < pos.allPieces.size(); i++) {
-                        Piece enemy = pos.allPieces.get(i);
-                        if(enemy.colour != colour  &&  enemy.isEyeing(pos, move[0], move[1]))
-                            continue outer;
-                    }
-                    legalMoves.add(move);
-                }
+                if((moveSuspect == null)  ||  (moveSuspect.colour != colour))
+                    if(!pos.underAttack(move[0], move[1]))
+                        legalMoves.add(move);
             }
         }
-        if(canCastleShort(pos)) {
+        
+        if(canCastleShort(pos))
             legalMoves.add(new int[]{rank, file + 2});
-        }
-        if(canCastleLong(pos)) {
+        if(canCastleLong(pos))
             legalMoves.add(new int[]{rank, file - 2});
-        }
         return legalMoves;
     }
 
-    public boolean canCastleShort(Position pos)                            //Review.
+    public boolean canCastleShort(Position pos)
     {
-        if(HAS_MOVED) {
+        if(HAS_MOVED  ||  pos.CHECK)
             return false;
-        }
-        if(pos.CHECK) {
-            return false;
-        }
+        
         Piece rook = pos.board[rank][7];
-        if(!(rook instanceof Rook)  ||  rook.hasMoved()) {
+        
+        if(!(rook instanceof Rook)  ||  rook.hasMoved())
             return false;
-        }
-        if(pos.board[rank][5] != null  ||  pos.board[rank][6] != null) {
+        if(pos.board[rank][5] != null  ||  pos.board[rank][6] != null)
             return false;
-        }
-        int[][] squaresToTraverse = {{rank, 5},{rank, 6}};
-        for(Piece enemy : pos.allPieces) {
-            if(enemy.colour != colour) {
-                for(int[] hostile : enemy.eyeing(pos)) {
-                    for(int[] move : squaresToTraverse) {
-                        if(hostile[0] == move[0]  &&  hostile[1] == move[1]) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
+        if(pos.underAttack(rank, 5)  ||  pos.underAttack(rank, 6))
+            return false;
+        
         return true;
     }
-    public boolean canCastleLong(Position pos)                             //Review.
+    public boolean canCastleLong(Position pos)
     {
-        if(HAS_MOVED) {
+        if(HAS_MOVED  ||  pos.CHECK)
             return false;
-        }
-        if(pos.CHECK) {
-            return false;
-        }
+        
         Piece rook = pos.board[rank][0];
-        if(!(rook instanceof Rook)  ||  rook.hasMoved()) {
+        
+        if(!(rook instanceof Rook)  ||  rook.hasMoved())
             return false;
-        }
-        if(pos.board[rank][3] != null  ||  pos.board[rank][2] != null  ||  pos.board[rank][1] != null) {
+        if(pos.board[rank][3] != null  ||  pos.board[rank][2] != null
+                ||  pos.board[rank][1] != null)
             return false;
-        }
-        int[][] squaresToTraverse = {{rank, 3},{rank, 2}};
-        for(Piece enemy : pos.allPieces) {
-            if(enemy.colour != colour) {
-                for(int[] hostile : enemy.eyeing(pos)) {
-                    for(int[] move : squaresToTraverse) {
-                        if(hostile[0] == move[0]  &&  hostile[1] == move[1]) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
+        if(pos.underAttack(rank, 3)  ||  pos.underAttack(rank, 2))
+            return false;
+        
         return true;
     }
 

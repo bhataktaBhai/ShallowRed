@@ -1,7 +1,5 @@
 package chess;
 
-import except.NoKingException;
-import except.NullPieceException;
 import pieces.King;
 import pieces.Pawn;
 import pieces.Piece;
@@ -42,7 +40,7 @@ public class Engine
             }
         }
 
-    public Position play(Position pos) throws NullPieceException, NoKingException
+    public Position play(Position pos)
     {
         tree = getTree(pos);
         tree = growTree(tree, LAYER);
@@ -70,7 +68,7 @@ public class Engine
     }
     
     
-    private ArrayList<MoveData> getTree(Position pos) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> getTree(Position pos)
     {
         if(tree == null) {
             return plantTree(pos, LAYER);
@@ -91,7 +89,7 @@ public class Engine
         return null;
     }
     
-    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, int layer) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> growTree(ArrayList<MoveData> tree, int layer)
     {
         for(MoveData possibleMove : tree) {
             if(possibleMove.tree() == null) {
@@ -108,15 +106,15 @@ public class Engine
         }
         return tree;
     }
-    private ArrayList<MoveData> plantTree(Position pos, int layer) throws NullPieceException, NoKingException
+    private ArrayList<MoveData> plantTree(Position pos, int layer)
     {
         if(layer < 1)
             return null;
         //System.out.println("Initialising tree...");
         ArrayList<MoveData> tree = new ArrayList<>();
         //Chess.print(pos.board);
-        for(int i = 0; i < pos.allPieces.size(); i++) {
-            Piece piece = pos.allPieces.get(i);
+        for(int i = 0; i < pos.pieces.size(); i++) {
+            Piece piece = pos.pieces.get(i);
             if(piece.colour != pos.turn) {
                 continue;
             }
@@ -124,7 +122,7 @@ public class Engine
             for(int[] move : moves) {
                 
                 boolean capture = false, forcing = false, doubleMove = false;
-                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.allPieces.clone();
+                ArrayList<Piece> newPieces = (ArrayList<Piece>) pos.pieces.clone();
                 Piece newPiece = newPieces.get(i);
                 
                 newPieces.remove(i);
@@ -162,14 +160,14 @@ public class Engine
                     }
                 }
                 
-                Piece movedPiece = newPiece.move(move);
+                Piece movedPiece = newPiece.move(new Move(newPiece, move));
                 newPieces.add(movedPiece);
                 
                 Position newPosition = new Position (newPieces, -pos.turn, doubleMove ? (Pawn) movedPiece : null);
                 if(newPosition.CHECK)
                     forcing = true;
                 else if(capture) {
-                    forcing = newPosition.underCheck(movedPiece);
+                    forcing = newPosition.underAttack(movedPiece.rank, movedPiece.file);
                 }
                 MoveData possibleMove = new MoveData(newPosition, newPiece, move);
                 possibleMove.setTree(plantTree(newPosition, forcing  &&  layer < 2 ? layer : layer - 1));

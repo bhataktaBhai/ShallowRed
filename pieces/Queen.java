@@ -27,8 +27,10 @@ public class Queen extends Piece
         if(rank == this.rank  &&  file == this.file)
             return false;
     
-        return (rank == this.rank) || (file == this.file) ||
-            (this.rank - this.file == rank - file) || (this.rank + this.file == rank + file);
+        return  rank == this.rank
+            ||  file == this.file
+            ||  this.rank - this.file == rank - file
+            ||  this.rank + this.file == rank + file;
     }
     @Override
     public boolean isEyeing(Position pos, int rank, int file)
@@ -37,30 +39,19 @@ public class Queen extends Piece
             return false;
     
         int rJump = 0, fJump = 0;
-        if(rank == this.rank) {
+        
+        if(rank == this.rank)
             fJump = file > this.file ? +1 : -1;
-        }
-        else if(file == this.file) {
+        else if(file == this.file)
             rJump = rank > this.rank ? +1 : -1;
-        }
-        else if(this.rank - this.file == rank - file) {
-            if(this.rank < rank)
-                rJump = fJump = +1;
-            else
-                rJump = fJump = -1;
-        }
-        else if(this.rank + this.file == rank + file) {
-            if(this.rank < rank) {
-                rJump = +1;     fJump = -1;
-            }
-            else {
-                rJump = -1;     fJump = +1;
-            }
-        }
-        else {
+        else if(this.rank - this.file == rank - file)
+            rJump = fJump = file > this.file ? +1 : -1;
+        else if(this.rank + this.file == rank + file)
+            rJump = -(fJump = file > this.file ? +1 : -1);
+        else
             return false;
-        }
-        return !obstruction(pos, rank, file, rJump, fJump);
+        
+        return clear(pos, rank, file, rJump, fJump);
     }
 
     @Override
