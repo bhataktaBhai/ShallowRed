@@ -1,8 +1,6 @@
 package chess;
 
-import pieces.King;
-import pieces.Pawn;
-import pieces.Piece;
+import pieces.*;
 import java.util.Scanner;
 import java.util.ArrayList;
 import javafx.util.Pair;
@@ -80,19 +78,6 @@ public class Chess
             position = position.move(move);
             underCheck = position.CHECK;
             stuck = position.stuck();
-            if(!stuck)
-            {
-                for(Piece p : position.pieces)
-                {
-                    if(p.colour == colour)
-                    {
-                        for(int[] moves : p.movableTo(position))
-                        {
-                            System.out.println(new Move(p, moves));
-                        }
-                    }
-                }
-            }
             checkmate = underCheck  &&  stuck;
             unwinnable = !position.winnable();
             fifty = numOfMoves > 99;
@@ -126,135 +111,6 @@ public class Chess
         }
     }
     
-    public void play2()
-    {
-        Scanner sc = new Scanner(System.in);
-        int colour = 1;
-        boolean checkmate, check, stuck, unwinnable, fifty, threefold, end;
-        checkmate = check = stuck = unwinnable = fifty = threefold = end = false;
-        Engine engine = new Engine();
-        
-        while(!end)
-        {
-            System.out.println((colour == 1 ? "WHITE" : "BLACK") + " to move.");
-            
-            if(colour == -1) {
-                String input = sc.next();
-                input = prep(input);
-                Move move = move(colour, input);
-                if(move == null)
-                    continue;
-                position = position.move(move);
-            }
-            
-            else {
-                System.out.println("Let the engine move.");
-                position = engine.play(position);
-            }
-            
-            colour *= -1;
-            check = position.CHECK;
-            stuck = position.stuck();
-            checkmate = check  &&  stuck;
-            unwinnable = !position.winnable();
-            fifty = numOfMoves > 99;
-            threefold = threefoldRepetition();
-            end = stuck  ||  unwinnable  ||  fifty  ||  threefold;
-            System.out.println(position);
-            System.out.println(Utils.getCapturedPieces(position.pieces).toString());
-            if(check) {
-                System.out.println("CHECK!");
-            }
-        }
-        
-        if(checkmate) {
-            System.out.println("And MATE!");
-            System.out.println(colour == 1 ? "0-1" : "1-0");
-        }
-        else {
-            if(stuck) {
-                System.out.println("Stalemate.");
-            }
-            if(unwinnable) {
-                System.out.println("Insufficient material.");
-            }
-            if(fifty) {
-                System.out.println("Fifty Moves w/o Pawn Move or Capture");
-            }
-            if(threefold) {
-                System.out.println("Threefold Repetition.");
-            }
-            System.out.println("½ - ½");
-        }
-    }
-    
-    public void play3()
-    {
-        Scanner sc = new Scanner(System.in);
-        int colour = 1;
-        boolean checkmate, check, stuck, unwinnable, fifty, threefold, end;
-        checkmate = check = stuck = unwinnable = fifty = threefold = end = false;
-        Engine2 engine = new Engine2();
-        System.out.println(position);
-        
-        Move lastMove = null;
-        while(!end)
-        {
-            System.out.println((colour == 1 ? "WHITE" : "BLACK") + " to move.");
-            
-            if(colour == -1) {
-                String input = sc.next();
-                input = prep(input);
-                Move move = move(colour, input);
-                if(move == null)
-                    continue;
-                position = position.move(move);
-            }
-            
-            else {
-                System.out.println("Let the engine move.");
-                Move move = engine.play(position, lastMove);
-                System.out.println(move.toString(position.board));
-                position = position.move(move);
-            }
-            
-            colour *= -1;
-            check = position.CHECK;
-            stuck = position.stuck();
-            checkmate = check  &&  stuck;
-            unwinnable = !position.winnable();
-            fifty = numOfMoves > 99;
-            threefold = threefoldRepetition();
-            end = stuck  ||  unwinnable  ||  fifty  ||  threefold;
-            System.out.println(position);
-            System.out.println(Utils.getCapturedPieces(position.pieces).toString());
-            System.out.printf("%.2f\n", position.eval());
-            if(check) {
-                System.out.println("CHECK!");
-            }
-        }
-        
-        if(checkmate) {
-            System.out.println("And MATE!");
-            System.out.println(colour == 1 ? "0-1" : "1-0");
-        }
-        else {
-            if(stuck) {
-                System.out.println("Stalemate.");
-            }
-            if(unwinnable) {
-                System.out.println("Insufficient material.");
-            }
-            if(fifty) {
-                System.out.println("Fifty Moves w/o Pawn Move or Capture");
-            }
-            if(threefold) {
-                System.out.println("Threefold Repetition.");
-            }
-            System.out.println("½ - ½");
-        }
-    }
-
     /**
      * Prepares the input move to be parsed. Removes optional annotations,
      * such as {@code "x","+","++","#","!","?","?!","!?"," e.p."}, and prefixes
